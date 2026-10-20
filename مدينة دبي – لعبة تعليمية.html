@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>مدينة دبي – لعبة تعليمية</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --gold: #C8960C;
+    --gold-light: #F5C842;
+    --sky: #006994;
+    --sky-light: #0096C7;
+    --sand: #F7EDD8;
+    --sand-dark: #EDD9A3;
+    --white: #FFFFFF;
+    --dark: #0D1B2A;
+    --correct: #1B7F4C;
+    --correct-bg: #D4EDDA;
+    --wrong: #B71C1C;
+    --wrong-bg: #FDECEA;
+    --radius: 16px;
+  }
+
+  body {
+    font-family: 'Cairo', sans-serif;
+    background: linear-gradient(160deg, #0D1B2A 0%, #006994 55%, #0D1B2A 100%);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    direction: rtl;
+  }
+
+  /* ── CARD ── */
+  .card {
+    background: var(--white);
+    border-radius: 24px;
+    width: 100%;
+    max-width: 680px;
+    overflow: hidden;
+    box-shadow: 0 24px 80px rgba(0,0,0,0.45);
+  }
+
+  /* ── HERO ── */
+  .hero {
+    background: linear-gradient(135deg, #0D1B2A 0%, #006994 100%);
+    padding: 32px 36px 28px;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::after {
+    content: '🏙️';
+    position: absolute;
+    left: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 5rem;
+    opacity: 0.18;
+    pointer-events: none;
+  }
+  .hero-label {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--gold-light);
+    letter-spacing: 2px;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+  }
+  .hero h1 {
+    font-size: 2rem;
+    font-weight: 900;
+    color: var(--white);
+    line-height: 1.2;
+    margin-bottom: 8px;
+  }
+  .hero h1 span { color: var(--gold-light); }
+  .hero p {
+    font-size: 0.95rem;
+    color: rgba(255,255,255,0.72);
+    max-width: 420px;
+  }
+
+  /* ── PROGRESS ── */
+  .progress-wrap {
+    padding: 18px 36px 0;
+    background: var(--sand);
+  }
+  .progress-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+  .q-counter {
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: var(--sky);
+  }
+  .score-badge {
+    background: var(--sky);
+    color: var(--white);
+    border-radius: 20px;
+    padding: 3px 14px;
+    font-size: 0.85rem;
+    font-weight: 700;
+  }
+  .bar-track {
+    height: 8px;
+    background: var(--sand-dark);
+    border-radius: 99px;
+    overflow: hidden;
+  }
+  .bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--sky-light), var(--gold));
+    border-radius: 99px;
+    transition: width 0.5s ease;
+  }
+
+  /* ── BODY ── */
+  .body {
+    padding: 28px 36px 32px;
+    background: var(--sand);
+  }
+
+  /* ── QUESTION ── */
+  .q-text {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--dark);
+    line-height: 1.7;
+    margin-bottom: 22px;
+    min-height: 56px;
+  }
+
+  /* ── OPTIONS ── */
+  .options { display: grid; gap: 12px; }
+  .opt {
+    background: var(--white);
+    border: 2.5px solid #D9E4EC;
+    border-radius: var(--radius);
+    padding: 14px 20px;
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: var(--dark);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    transition: border-color .2s, background .2s, transform .1s;
+    user-select: none;
+    text-align: right;
+  }
+  .opt:hover:not(:disabled) {
+    border-color: var(--sky-light);
+    background: #EBF6FC;
+    transform: translateX(-3px);
+  }
+  .opt-letter {
+    min-width: 34px; height: 34px;
+    border-radius: 10px;
+    background: var(--sand-dark);
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 900; font-size: 0.95rem;
+    color: var(--sky);
+    flex-shrink: 0;
+    transition: background .2s, color .2s;
+  }
+  .opt.correct {
+    border-color: var(--correct);
+    background: var(--correct-bg);
+    color: var(--correct);
+  }
+  .opt.correct .opt-letter { background: var(--correct); color: #fff; }
+  .opt.wrong {
+    border-color: var(--wrong);
+    background: var(--wrong-bg);
+    color: var(--wrong);
+  }
+  .opt.wrong .opt-letter { background: var(--wrong); color: #fff; }
+  .opt:disabled { cursor: default; }
+
+  /* ── FEEDBACK ── */
+  .feedback {
+    margin-top: 18px;
+    padding: 14px 18px;
+    border-radius: var(--radius);
+    font-size: 1rem;
+    font-weight: 700;
+    display: none;
+    align-items: center;
+    gap: 10px;
+  }
+  .feedback.show { display: flex; }
+  .feedback.correct { background: var(--correct-bg); color: var(--correct); }
+  .feedback.wrong   { background: var(--wrong-bg);   color: var(--wrong); }
+
+  /* ── NEXT BTN ── */
+  .btn-next {
+    display: none;
+    margin-top: 22px;
+    width: 100%;
+    padding: 15px;
+    background: linear-gradient(135deg, var(--sky) 0%, var(--sky-light) 100%);
+    color: var(--white);
+    border: none;
+    border-radius: var(--radius);
+    font-family: 'Cairo', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 900;
+    cursor: pointer;
+    transition: opacity .2s, transform .1s;
+  }
+  .btn-next:hover { opacity: 0.92; transform: scale(0.99); }
+  .btn-next.show { display: block; }
+
+  /* ── RESULT SCREEN ── */
+  .result {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 40px 36px;
+    background: var(--sand);
+  }
+  .result.show { display: flex; }
+  .result-trophy { font-size: 4.5rem; margin-bottom: 12px; }
+  .result h2 {
+    font-size: 1.8rem;
+    font-weight: 900;
+    color: var(--dark);
+    margin-bottom: 8px;
+  }
+  .result-score {
+    font-size: 3.5rem;
+    font-weight: 900;
+    color: var(--sky);
+    line-height: 1;
+    margin: 10px 0 6px;
+  }
+  .result-sub { font-size: 1rem; color: #666; margin-bottom: 24px; }
+  .stars { font-size: 2.2rem; margin-bottom: 24px; letter-spacing: 4px; }
+  .btn-restart {
+    padding: 14px 40px;
+    background: linear-gradient(135deg, var(--gold) 0%, var(--gold-light) 100%);
+    color: var(--dark);
+    border: none;
+    border-radius: var(--radius);
+    font-family: 'Cairo', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 900;
+    cursor: pointer;
+    transition: transform .15s;
+  }
+  .btn-restart:hover { transform: scale(1.03); }
+
+  /* ── DOTS ── */
+  .dots {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    padding: 14px 0 0;
+  }
+  .dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background: var(--sand-dark);
+    transition: background .3s;
+  }
+  .dot.active { background: var(--sky); }
+  .dot.done   { background: var(--gold); }
+
+  /* skyline decoration */
+  .skyline {
+    height: 40px;
+    background: var(--sand);
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    gap: 3px;
+    padding: 0 36px;
+    overflow: hidden;
+  }
+  .bldg {
+    background: linear-gradient(to top, #D9E4EC, #EEF5FA);
+    border-radius: 3px 3px 0 0;
+    flex: 1;
+    max-width: 28px;
+  }
+
+  @media (max-width: 500px) {
+    .hero { padding: 24px 20px 20px; }
+    .hero h1 { font-size: 1.5rem; }
+    .body { padding: 20px 20px 24px; }
+    .progress-wrap { padding: 14px 20px 0; }
+    .q-text { font-size: 1.1rem; }
+  }
+</style>
+</head>
+<body>
+
+<div class="card">
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="hero-label">لعبة تعليمية</div>
+    <h1>مدينة <span>دُبَيّ</span> 🏙️</h1>
+    <p>اقرأ الفقرة جيداً واختر الإجابة الصحيحة!</p>
+  </div>
+
+  <!-- SKYLINE -->
+  <div class="skyline" id="skyline"></div>
+
+  <!-- PROGRESS -->
+  <div class="progress-wrap" id="progressWrap">
+    <div class="progress-top">
+      <span class="q-counter" id="qCounter">السؤال ١ من ٥</span>
+      <span class="score-badge" id="scoreBadge">النقاط: ٠</span>
+    </div>
+    <div class="bar-track"><div class="bar-fill" id="barFill" style="width:0%"></div></div>
+    <div class="dots" id="dots"></div>
+  </div>
+
+  <!-- QUIZ BODY -->
+  <div class="body" id="quizBody">
+    <div class="q-text" id="qText"></div>
+    <div class="options" id="options"></div>
+    <div class="feedback" id="feedback"></div>
+    <button class="btn-next" id="btnNext" onclick="nextQ()">التالي ←</button>
+  </div>
+
+  <!-- RESULT -->
+  <div class="result" id="resultScreen">
+    <div class="result-trophy" id="trophy">🏆</div>
+    <h2 id="resultTitle">أحسنت!</h2>
+    <div class="result-score" id="resultScore"></div>
+    <div class="result-sub" id="resultSub"></div>
+    <div class="stars" id="resultStars"></div>
+    <button class="btn-restart" onclick="restart()">🔄 العب مرة أخرى</button>
+  </div>
+
+</div>
+
+<script>
+const questions = [
+  {
+    q: "مَنِ الشَّخْصُ الَّذِي يَتَحَدَّثُ فِي الْفَقْرَةِ؟",
+    opts: ["مُحَمَّد", "حَمْدَان", "خَالِد", "سَالِم"],
+    ans: 1,
+    fb: "✅ صحيح! الشخص اسمه حَمْدَان."
+  },
+  {
+    q: "لِمَاذَا يُحِبُّ حَمْدَان مَدِينَةَ دُبَيَّ؟",
+    opts: [
+      "لِأَنَّهَا كَبِيرَةٌ وَغَالِيَةٌ",
+      "لِأَنَّهَا جَمِيلَةٌ وَنَظِيفَةٌ وَآمِنَةٌ",
+      "لِأَنَّهَا قَدِيمَةٌ وَتَارِيخِيَّةٌ",
+      "لِأَنَّهَا صَغِيرَةٌ وَهَادِئَةٌ"
+    ],
+    ans: 1,
+    fb: "✅ صحيح! دبي جميلة ونظيفة وآمنة وواسعة."
+  },
+  {
+    q: "أَيُّ هَذِهِ الْمَعَالِمِ ذُكِرَ فِي الْفَقْرَةِ؟",
+    opts: [
+      "بُرْجُ نَايِفَة",
+      "مَتْحَفُ الذَّهَب",
+      "بُرْجُ خَلِيفَة",
+      "قَصْرُ الإِمَارَات"
+    ],
+    ans: 2,
+    fb: "✅ صحيح! بُرج خليفة من أبرز معالم دبي المذكورة."
+  },
+  {
+    q: "مَا رَأْيُ حَمْدَان فِي دُبَيَّ؟",
+    opts: [
+      "مَدِينَةٌ مُمِلَّةٌ",
+      "مَدِينَةٌ رَائِعَةٌ",
+      "مَدِينَةٌ صَغِيرَةٌ",
+      "مَدِينَةٌ غَالِيَةٌ"
+    ],
+    ans: 1,
+    fb: "✅ صحيح! قال حمدان: دبي مدينةٌ رائعةٌ."
+  },
+  {
+    q: "مَاذَا يَقُولُ حَمْدَان عَمَّنْ يَرَى أَنَّ دُبَيَّ مُمِلَّةٌ؟",
+    opts: [
+      "يَتَّفِقُ مَعَهُ",
+      "لَا يَعْرِفُ رَأْيَهُ",
+      "يَخْتَلِفُ مَعَهُ",
+      "لَا يُهِمُّهُ الْأَمْر"
+    ],
+    ans: 2,
+    fb: "✅ صحيح! قال حمدان: أختلف مع من يقول إنها مدينةٌ مُملَّة."
+  }
+];
+
+let current = 0, score = 0, answered = false;
+const arabic = ['١','٢','٣','٤','٥'];
+
+// Build skyline
+const skyline = document.getElementById('skyline');
+const heights = [18,28,14,36,10,22,32,12,26,18,34,8,20,30,16,24];
+heights.forEach(h => {
+  const d = document.createElement('div');
+  d.className = 'bldg';
+  d.style.height = h + 'px';
+  skyline.appendChild(d);
+});
+
+// Build dots
+function buildDots() {
+  const wrap = document.getElementById('dots');
+  wrap.innerHTML = '';
+  questions.forEach((_, i) => {
+    const d = document.createElement('div');
+    d.className = 'dot' + (i < current ? ' done' : i === current ? ' active' : '');
+    wrap.appendChild(d);
+  });
+}
+
+function loadQ() {
+  answered = false;
+  const q = questions[current];
+  document.getElementById('qText').textContent = q.q;
+  document.getElementById('qCounter').textContent = `السؤال ${arabic[current]} من ٥`;
+  document.getElementById('scoreBadge').textContent = `النقاط: ${toArabicNum(score)}`;
+  document.getElementById('barFill').style.width = (current / questions.length * 100) + '%';
+  document.getElementById('feedback').className = 'feedback';
+  document.getElementById('feedback').textContent = '';
+  document.getElementById('btnNext').className = 'btn-next';
+  buildDots();
+
+  const opts = document.getElementById('options');
+  opts.innerHTML = '';
+  const letters = ['أ','ب','ج','د'];
+  q.opts.forEach((text, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'opt';
+    btn.innerHTML = `<span class="opt-letter">${letters[i]}</span>${text}`;
+    btn.onclick = () => selectOpt(i, btn);
+    opts.appendChild(btn);
+  });
+}
+
+function toArabicNum(n) {
+  return n.toString().replace(/\d/g, d => '٠١٢٣٤٥٦٧٨٩'[d]);
+}
+
+function selectOpt(idx, btn) {
+  if (answered) return;
+  answered = true;
+  const q = questions[current];
+  const allBtns = document.querySelectorAll('.opt');
+  allBtns.forEach(b => b.disabled = true);
+
+  const fb = document.getElementById('feedback');
+  if (idx === q.ans) {
+    btn.classList.add('correct');
+    score++;
+    fb.className = 'feedback correct show';
+    fb.textContent = q.fb;
+  } else {
+    btn.classList.add('wrong');
+    allBtns[q.ans].classList.add('correct');
+    fb.className = 'feedback wrong show';
+    fb.textContent = '❌ ' + q.fb;
+  }
+
+  document.getElementById('btnNext').className = 'btn-next show';
+  document.getElementById('btnNext').textContent = current < questions.length - 1 ? 'التالي ←' : 'عرض النتيجة 🏆';
+}
+
+function nextQ() {
+  current++;
+  if (current >= questions.length) {
+    showResult();
+  } else {
+    loadQ();
+  }
+}
+
+function showResult() {
+  document.getElementById('quizBody').style.display = 'none';
+  document.getElementById('progressWrap').style.display = 'none';
+  const res = document.getElementById('resultScreen');
+  res.className = 'result show';
+
+  const pct = score / questions.length;
+  let trophy = '🏆', title = 'ممتاز!', stars = '⭐⭐⭐⭐⭐';
+  if (pct < 0.4) { trophy = '📚'; title = 'حاول مرة أخرى!'; stars = '⭐'; }
+  else if (pct < 0.6) { trophy = '💪'; title = 'جيد!'; stars = '⭐⭐'; }
+  else if (pct < 0.8) { trophy = '😊'; title = 'جيد جداً!'; stars = '⭐⭐⭐'; }
+  else if (pct < 1) { trophy = '🎉'; title = 'أحسنت!'; stars = '⭐⭐⭐⭐'; }
+
+  document.getElementById('trophy').textContent = trophy;
+  document.getElementById('resultTitle').textContent = title;
+  document.getElementById('resultScore').textContent = `${toArabicNum(score)} / ٥`;
+  document.getElementById('resultSub').textContent = `أجبت على ${toArabicNum(score)} أسئلة بشكل صحيح`;
+  document.getElementById('resultStars').textContent = stars;
+}
+
+function restart() {
+  current = 0; score = 0; answered = false;
+  document.getElementById('quizBody').style.display = '';
+  document.getElementById('progressWrap').style.display = '';
+  document.getElementById('resultScreen').className = 'result';
+  loadQ();
+}
+
+loadQ();
+</script>
+</body>
+</html>
